@@ -11,7 +11,6 @@ Issues to fix:
 
 3.) The UI doesn't show up in packaged game, if the package was created with the shipping configuration.
 
-
 Features to add:
 
 1.) When an empty field with no mines around it is revealed, the neighboring fields should also be revealed. Just like in the minesweeper Designer used to play on his Windows 98!
@@ -22,5 +21,6 @@ Features to add:
 
 4.) A difficulty slider should be added to the widget. It should influence the amount of mines spawned.
 
-
 ####################################
+
+gameover->reveal all
