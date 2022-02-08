@@ -14,11 +14,17 @@ void UDNABoard::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 	
- check(GenerateFieldWidgets());
 	CurrentGameStatus=GT_GAME_STATUS_WAITING;
  
 }
- 
+
+void UDNABoard::NativeConstruct()
+{
+	Super::NativeConstruct();
+	check(GenerateFieldWidgets());
+
+}
+
 FReply UDNABoard::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	bIsLeftMouseClicked= InMouseEvent.GetEffectingButton().GetFName().IsEqual(TEXT("LeftMouseButton"));
@@ -45,6 +51,7 @@ void UDNABoard::HandleClickOnField(const int32 ColIndex, const int32 RowIndex, c
 	 ///this is gameover
 	if (FieldArray[FieldIndex])
 	{
+		ChangeGameStatus(GT_GAME_STATUS_GAME_OVER);
 		if(OnRevealAll.IsBound())
 			OnRevealAll.Broadcast();
 		return;
@@ -119,7 +126,8 @@ bool UDNABoard::GenerateFieldWidgets()
 {
 	if(FieldClass==nullptr)return  false;
 	if (Fields == nullptr)return false;
-	 
+	CheckList.Empty();
+	
 	if (RowNum < 0 || ColumnNum < 0)
 	{
 		return false;
@@ -135,7 +143,7 @@ bool UDNABoard::GenerateFieldWidgets()
 			UDNAField* FieldWidget = CreateWidget<UDNAField>(this,FieldClass);
 			FieldWidget->InitializeField(FIntPoint(x,y),this);
 			 FieldWidget->Index=CalcIndex(x,y); 
-			
+		
 				Fields->AddChild(FieldWidget);
 			WidgetsField[FieldWidget->Index]=(FieldWidget);
 			UUniformGridSlot*GridSlot=	 Cast<UUniformGridSlot>(FieldWidget->Slot) ;
@@ -158,11 +166,12 @@ void UDNABoard::GenerateBoard(int32 ClickColIndex, int32 ClickRowIndex)
 	 
 		const bool bHasMine=UKismetMathLibrary::RandomFloat() < MineChance;
 		 FieldArray[i] =  bHasMine;
-	 
-		WidgetsField[i]->SetIndexAndMine(i, FieldIndex==i?false:bHasMine);
+		WidgetsField[i]->SetIndexAndMine(i,bHasMine);
 	 
 	}
-
+	FieldArray[FieldIndex] = false;
+	WidgetsField[FieldIndex]->SetIndexAndMine(FieldIndex,false);
+	
 	for (int i = 0; i < WidgetsField.Num(); ++i)
 	{
 		 	WidgetsField[i]->NumberMinesAround=CalculateFieldNumber(WidgetsField[i]->BoardPosition.X,WidgetsField[i]->BoardPosition.Y);
@@ -176,7 +185,7 @@ void UDNABoard::GenerateBoard(int32 ClickColIndex, int32 ClickRowIndex)
 
 int32 UDNABoard::CalcIndex(int32 ColIndex, int32 RowIndex)
 {
-	return ColIndex * ColumnNum +RowIndex ;
+	return RowIndex * ColumnNum +ColIndex ;
 }
 
 int32 UDNABoard::GetValue(int32 ColIndex, int32 RowIndex)
@@ -200,20 +209,31 @@ bool UDNABoard::CheckIsValidIndex(int32 ColIndex, int32 RowIndex)
 void UDNABoard::UpdateFieldCount()
 {
 	{
-		/* if(ensureMsgf(HiddenFieldCount==nullptr,TEXT("HiddenFieldCount is NULL, Assign it")))
-			 return;*/
+	 
 		if(HiddenFieldCount==nullptr)return;
 		
 		int32 FieldCount=0;
+		int32 FlagCount=0;
+		int32 MineCount=0;
 		for (UDNAField* Field : WidgetsField)
 		{
 			//this should not happen but anyway
 			if(Field==nullptr)continue;
 			FieldCount+=Field->FieldState.MatchesTag(GT_FIELD_HIDDEN)?1:0;
+			FlagCount+= Field->FieldState.MatchesTag(GT_FIELD_FLAGGED)?1:0;
+			MineCount+=Field->bHasMine?1:0;
+			 
+			
 		}
 		
 		HiddenFieldCount->SetText(FText::AsNumber(FieldCount));
-		
+
+		if(FieldCount<=0 && FlagCount==MineCount)
+		{
+			ChangeGameStatus(GT_GAME_STATUS_WIN);
+			if(OnRevealAll.IsBound())
+				OnRevealAll.Broadcast();
+		}
 	}
 }
 

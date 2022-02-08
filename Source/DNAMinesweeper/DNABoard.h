@@ -19,6 +19,7 @@ class UDNAField;
 #define GT_GAME_STATUS_WAITING FGameplayTag::RequestGameplayTag(FName("GameState.Waiting"))
 #define GT_GAME_STATUS_BEGIN FGameplayTag::RequestGameplayTag(FName("GameState.Begin"))
 #define GT_GAME_STATUS_GAME_OVER FGameplayTag::RequestGameplayTag(FName("GameState.GameOver"))
+#define GT_GAME_STATUS_WIN FGameplayTag::RequestGameplayTag(FName("GameState.Win"))
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNotifyGameStateChange,FGameplayTag,CurrentState);
 
@@ -37,7 +38,7 @@ class DNAMINESWEEPER_API UDNABoard : public UUserWidget
 	//UUserWidget interface
 	virtual void NativePreConstruct() override;
 	//~ End UUserWidget Interface
-
+	virtual void NativeConstruct() override;
  
 	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 public:
