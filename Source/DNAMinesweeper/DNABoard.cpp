@@ -15,13 +15,13 @@ void UDNABoard::NativePreConstruct()
 	Super::NativePreConstruct();
 	
 	CurrentGameStatus=GT_GAME_STATUS_WAITING;
- 
+ GenerateFieldWidgets() ;
 }
 
 void UDNABoard::NativeConstruct()
 {
 	Super::NativeConstruct();
-	check(GenerateFieldWidgets());
+
 
 }
 
@@ -140,13 +140,13 @@ bool UDNABoard::GenerateFieldWidgets()
 	for (int32 y = 0; y < RowNum ; ++y)
 		{
 	 
-			UDNAField* FieldWidget = CreateWidget<UDNAField>(this,FieldClass);
+			UDNAField* FieldWidget = CreateWidget<UDNAField>(GetWorld(),FieldClass);
 			FieldWidget->InitializeField(FIntPoint(x,y),this);
 			 FieldWidget->Index=CalcIndex(x,y); 
 		
-				Fields->AddChild(FieldWidget);
+			UUniformGridSlot*GridSlot=	Fields->AddChildToUniformGrid(FieldWidget);
 			WidgetsField[FieldWidget->Index]=(FieldWidget);
-			UUniformGridSlot*GridSlot=	 Cast<UUniformGridSlot>(FieldWidget->Slot) ;
+			//UUniformGridSlot*GridSlot=	 Cast<UUniformGridSlot>(FieldWidget->Slot) ;
 				if(GridSlot==nullptr)continue;
 				GridSlot->SetRow(y);
 				GridSlot->SetColumn(x); 
@@ -254,6 +254,6 @@ void UDNABoard::ChangeSize(const int32 ColumnNumber, const int32 RowNumber)
 	if(!CurrentGameStatus.MatchesTag(GT_GAME_STATUS_WAITING))return;
 	ColumnNum=FMath::Clamp(ColumnNumber,3,12);
 	RowNum=FMath::Clamp(RowNumber,3,12);
-	check(GenerateFieldWidgets());
+ GenerateFieldWidgets();
 	UpdateFieldCount();
 }
